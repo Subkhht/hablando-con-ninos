@@ -1,6 +1,6 @@
 # 🗣️ HablaNinos — Aprende a hablar jugando
 
-![HablaNinos] 
+![HablaNinos](https://via.placeholder.com/800x400/ff7675/ffffff?text=HablaNinos+-+Aprende+a+hablar+jugando)  
 *Una aplicación web interactiva para que niños pequeños (1-5 años) desarrollen su lenguaje de forma divertida.*
 
 ---
