@@ -1,16 +1,45 @@
-# React + Vite
+# 🗣️ HablaNinos — Aprende a hablar jugando
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![HablaNinos] 
+*Una aplicación web interactiva para que niños pequeños (1-5 años) desarrollen su lenguaje de forma divertida.*
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌟 Características
 
-## React Compiler
+- ✅ **4 idiomas**: Español, Inglés, Francés y Alemán.
+- ✅ **Más de 60 palabras** en 6 categorías: Animales, Comida, Colores, Ropa, Juguetes y Familia.
+- ✅ **Modo exploración**: Toca cualquier palabra para escuchar su pronunciación correcta.
+- ✅ **Modo juego**: "¿Dónde está el...?" — el niño debe identificar el ícono correcto **solo por la pista auditiva** (sin texto en las opciones).
+- ✅ **Retroalimentación positiva**: Confeti + sonido al acertar.
+- ✅ **Progreso guardado**: Se registra automáticamente en el navegador (`localStorage`).
+- ✅ **Totalmente táctil**: Diseñado para tablets y móviles.
+- ✅ **Sin reconocimiento de voz**: Evita fallos en navegadores; 100% funcional con toques.
+- ✅ **100% gratuito y de código abierto**.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🌐 Demo en vivo
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+👉 **[Ver la aplicación en GitHub Pages](https://subkhht.github.io/hablando-con-ninos/)**  
+
+> 💡 **Consejo para padres**: Abre la app en una tablet, ponla en modo horizontal y deja que tu hijo explore libremente.
+
+---
+
+## 🛠️ Tecnologías usadas
+
+- **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Síntesis de voz**: Web Speech API (nativa del navegador)
+- **Animaciones**: [canvas-confetti](https://github.com/catdad/canvas-confetti)
+- **Diseño**: CSS puro (sin frameworks pesados)
+- **Hosting**: [GitHub Pages](https://pages.github.com/)
+
+---
+
+## 🚀 Cómo ejecutar localmente
+
+1. **Clona el repositorio**
+   ```bash
+   git clone https://github.com/tu-usuario/habla-ninos.git
+   cd habla-ninos
