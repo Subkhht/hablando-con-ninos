@@ -117,7 +117,7 @@ function celebrar() {
 
   // Sonido desde CDN (libre de derechos)
   const playSound = () => {
-    const audio = new Audio('/src/assets/videoplayback.m4a');
+    const audio = new Audio('/src/assets/videoplayback.m4a/');
     audio.volume = 0.6;
     audio.play().catch(e => console.log("Audio play failed:", e));
   };
