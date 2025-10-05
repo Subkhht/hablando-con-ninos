@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-  "homepage": "https://Subkhht.github.io/hablando-con-ninos",
+  "homepage": "https://subkhht.github.io/hablando-con-ninos/",
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
