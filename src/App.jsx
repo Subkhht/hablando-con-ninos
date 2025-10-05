@@ -347,6 +347,7 @@ function ModoJuego({ idioma, onVolver }) {
 
 // Modo Lectura
 function ModoLectura({ idioma, onVolver }) {
+  const [mostrarEmojis, setMostrarEmojis] = useState(true);
   const todasPalabras = CATEGORIAS.flatMap(cat => cat.items);
 
   const leerPorSilabas = (palabra) => {
@@ -475,6 +476,20 @@ function ModoLectura({ idioma, onVolver }) {
       <h2>📖 Modo Lectura</h2>
       <p>Toca una palabra para escucharla por sílabas</p>
       
+      {/* Switch para mostrar/ocultar emojis */}
+      <div className="control-emojis">
+        <label className="switch-label">
+          <span>Mostrar emojis</span>
+          <input
+            type="checkbox"
+            checked={mostrarEmojis}
+            onChange={(e) => setMostrarEmojis(e.target.checked)}
+            className="switch-checkbox"
+          />
+          <span className="switch-slider"></span>
+        </label>
+      </div>
+      
       <div className="contenedor-palabras-lectura">
         {todasPalabras.map((item, i) => {
           const texto = item.palabra[idioma];
@@ -486,7 +501,7 @@ function ModoLectura({ idioma, onVolver }) {
               onClick={() => leerPorSilabas(texto)}
               aria-label={`Palabra: ${texto}`}
             >
-              <span className="icono-lectura">{item.icono}</span>
+              {mostrarEmojis && <span className="icono-lectura">{item.icono}</span>}
               <div className="silabas">{silabas}</div>
             </button>
           );
