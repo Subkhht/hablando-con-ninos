@@ -75,22 +75,146 @@ const CATEGORIAS = [
   }
 ];
 
-// Hablar en el idioma correcto
+// Función para hablar
 function hablar(texto, idioma) {
   if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(texto);
-    // Mapeo de idiomas para Web Speech API
-    const langMap = {
-      es: 'es-ES',
-      en: 'en-US',
-      fr: 'fr-FR',
-      de: 'de-DE'
-    };
+    const langMap = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
     utterance.lang = langMap[idioma] || 'es-ES';
     utterance.rate = 0.85;
     utterance.pitch = 1.1;
     speechSynthesis.speak(utterance);
+  }
+}
+
+// 🔤 División silábica precisa para español
+function dividirEnSilabasEspanol(palabra) {
+  const palabraOriginal = palabra;
+  const palabraLower = palabra.toLowerCase();
+  const sinTildes = palabraLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  const vocales = 'aeiouáéíóúü';
+  const consonantes = 'bcdfghjklmnñpqrstvwxyz';
+  
+  // Diptongos y triptongos que NO se separan
+  const diptongos = ['ai', 'au', 'ei', 'eu', 'oi', 'ou', 'ia', 'ie', 'io', 'iu', 'ua', 'ue', 'ui', 'uo'];
+  
+  const silabas = [];
+  let i = 0;
+  
+  while (i < sinTildes.length) {
+    let silaba = '';
+    
+    // 1. Recoger consonantes iniciales (incluyendo grupos consonánticos)
+    while (i < sinTildes.length && consonantes.includes(sinTildes[i])) {
+      silaba += sinTildes[i];
+      i++;
+    }
+    
+    // 2. Recoger vocal(es) - núcleo silábico
+    if (i < sinTildes.length && vocales.includes(sinTildes[i])) {
+      const inicioVocal = i;
+      silaba += sinTildes[i];
+      i++;
+      
+      // Verificar si forma diptongo con la siguiente vocal
+      if (i < sinTildes.length && vocales.includes(sinTildes[i])) {
+        const posibleDiptongo = sinTildes.substring(inicioVocal, i + 1);
+        if (diptongos.includes(posibleDiptongo)) {
+          silaba += sinTildes[i];
+          i++;
+        }
+      }
+    }
+    
+    // 3. Decidir qué consonantes van con esta sílaba y cuáles con la siguiente
+    let consonantesFinales = '';
+    let j = i;
+    
+    while (j < sinTildes.length && consonantes.includes(sinTildes[j])) {
+      consonantesFinales += sinTildes[j];
+      j++;
+    }
+    
+    if (consonantesFinales.length > 0) {
+      // Si hay vocal después, aplicar reglas de división
+      if (j < sinTildes.length && vocales.includes(sinTildes[j])) {
+        // Grupos inseparables que van con la siguiente sílaba
+        const gruposInseparables = ['bl', 'br', 'cl', 'cr', 'dr', 'fl', 'fr', 'gl', 'gr', 'pl', 'pr', 'tl', 'tr', 'ch', 'll', 'rr'];
+        
+        if (consonantesFinales.length === 1) {
+          // Una consonante va con la siguiente sílaba
+          // No agregamos nada a la sílaba actual
+        } else if (consonantesFinales.length === 2) {
+          const grupo = consonantesFinales;
+          if (gruposInseparables.includes(grupo)) {
+            // El grupo completo va con la siguiente sílaba
+          } else {
+            // Se divide: primera va con esta sílaba, segunda con la siguiente
+            silaba += consonantesFinales[0];
+            i++;
+          }
+        } else if (consonantesFinales.length >= 3) {
+          // Para 3+ consonantes, las últimas dos pueden formar grupo inseparable
+          const ultimasDos = consonantesFinales.slice(-2);
+          if (gruposInseparables.includes(ultimasDos)) {
+            // Todas menos las últimas dos van con esta sílaba
+            const paraTiSilaba = consonantesFinales.slice(0, -2);
+            silaba += paraTiSilaba;
+            i += paraTiSilaba.length;
+          } else {
+            // Todas menos la última van con esta sílaba
+            const paraTiSilaba = consonantesFinales.slice(0, -1);
+            silaba += paraTiSilaba;
+            i += paraTiSilaba.length;
+          }
+        }
+      } else {
+        // No hay más vocales, todas las consonantes van con esta sílaba
+        silaba += consonantesFinales;
+        i += consonantesFinales.length;
+      }
+    }
+    
+    if (silaba.length > 0) {
+      silabas.push(silaba);
+    }
+  }
+  
+  // Reconstruir con las tildes originales
+  let silabasConTildes = [];
+  let idx = 0;
+  for (let silaba of silabas) {
+    let silabaConTilde = '';
+    for (let k = 0; k < silaba.length; k++) {
+      if (idx < palabraOriginal.length) {
+        silabaConTilde += palabraOriginal[idx];
+        idx++;
+      }
+    }
+    silabasConTildes.push(silabaConTilde);
+  }
+  
+  return silabasConTildes.filter(s => s.length > 0);
+}
+
+// Función principal de división
+function dividirEnSilabas(palabra, idioma = 'es') {
+  if (idioma === 'es') {
+    return dividirEnSilabasEspanol(palabra);
+  } else {
+    const silabas = [];
+    let i = 0;
+    while (i < palabra.length) {
+      let corte = 2;
+      if (i + 2 < palabra.length && !'aeiouAEIOU'.includes(palabra[i + 2])) {
+        corte = 3;
+      }
+      silabas.push(palabra.slice(i, i + corte));
+      i += corte;
+    }
+    return silabas;
   }
 }
 
@@ -104,9 +228,8 @@ function guardarProgreso(palabra, idioma, esCorrecto) {
   localStorage.setItem('progresoHabla', JSON.stringify(progreso));
 }
 
-// Celebración: confeti + sonido
+// Celebración
 function celebrar() {
-  // Confeti
   if (window.confetti) {
     window.confetti({
       particleCount: 150,
@@ -115,9 +238,8 @@ function celebrar() {
     });
   }
 
-  // Sonido desde CDN (libre de derechos)
   const playSound = () => {
-    const audio = new Audio('/src/assets/videoplayback.m4a/');
+    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
     audio.volume = 0.6;
     audio.play().catch(e => console.log("Audio play failed:", e));
   };
@@ -131,7 +253,7 @@ function celebrar() {
   document.body.addEventListener('click', handleClick, { once: true });
 }
 
-// Tarjeta de palabra
+// Tarjeta de palabra (modo exploración)
 function TarjetaPalabra({ item, idioma }) {
   const texto = item.palabra[idioma];
   return (
@@ -146,7 +268,7 @@ function TarjetaPalabra({ item, idioma }) {
   );
 }
 
-// Modo Juego: ahora solo muestra íconos en las opciones
+// Modo Juego
 function ModoJuego({ idioma, onVolver }) {
   const [objetivo, setObjetivo] = useState(null);
   const [opciones, setOpciones] = useState([]);
@@ -207,17 +329,15 @@ function ModoJuego({ idioma, onVolver }) {
     <div className="modo-juego">
       <button className="btn-volver" onClick={onVolver}>← Volver</button>
       <h2>{mensaje}</h2>
-      
       <div className="contenedor-opciones-juego">
         {opciones.map((item, i) => (
           <button
             key={i}
             className="opcion-juego solo-icono"
             onClick={() => verificarRespuesta(item === objetivo)}
-            aria-label={item.palabra[idioma]} // Accesibilidad
+            aria-label={item.palabra[idioma]}
           >
             <span className="icono">{item.icono}</span>
-            {/* ❌ Texto eliminado aquí */}
           </button>
         ))}
       </div>
@@ -225,10 +345,162 @@ function ModoJuego({ idioma, onVolver }) {
   );
 }
 
+// Modo Lectura
+function ModoLectura({ idioma, onVolver }) {
+  const todasPalabras = CATEGORIAS.flatMap(cat => cat.items);
+
+  const leerPorSilabas = (palabra) => {
+    const silabas = dividirEnSilabas(palabra, idioma);
+    const langMap = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
+    const lang = langMap[idioma] || 'es-ES';
+
+    speechSynthesis.cancel();
+
+    // Función para mejorar la pronunciación de sílabas individuales
+    const mejorarPronunciacion = (silaba) => {
+      if (idioma !== 'es') return silaba;
+      
+      const sil = silaba.toLowerCase();
+      
+      // Mapeo fonético especial para sílabas muy problemáticas
+      const mejorasEspeciales = {
+        // "C" suena mejor como "K" en el motor TTS
+        'ca': 'ka',
+        'co': 'ko',
+        'cu': 'ku',
+        // "G" fuerte
+        'ga': 'gaa',
+        'go': 'goo',
+        'gu': 'guu',
+        // "B"
+        'ba': 'bah',
+        'be': 'beh',
+        'bi': 'bih',
+        'bo': 'boh',
+        'bu': 'buh',
+        // Otras consonantes con vocales dobles
+        'da': 'da',
+        'de': 'de',
+        'di': 'di',
+        'do': 'do',
+        'du': 'du',
+        'fa': 'fa',
+        'fe': 'fe',
+        'fi': 'fi',
+        'fo': 'fo',
+        'fu': 'fu',
+        'ja': 'ja',
+        'je': 'je',
+        'ji': 'ji',
+        'jo': 'jo',
+        'ju': 'ju',
+        'la': 'la',
+        'le': 'le',
+        'li': 'li',
+        'lo': 'lo',
+        'lu': 'lu',
+        'ma': 'ma',
+        'me': 'me',
+        'mi': 'mi',
+        'mo': 'mo',
+        'mu': 'mu',
+        'na': 'na',
+        'ne': 'ne',
+        'ni': 'ni',
+        'no': 'no',
+        'nu': 'nu',
+        'pa': 'pa',
+        'pe': 'pe',
+        'pi': 'pi',
+        'po': 'po',
+        'pu': 'pu',
+        'ra': 'ra',
+        're': 're',
+        'ri': 'ri',
+        'ro': 'ro',
+        'ru': 'ru',
+        'sa': 'sa',
+        'se': 'se',
+        'si': 'si',
+        'so': 'so',
+        'su': 'su',
+        'ta': 'ta',
+        'te': 'te',
+        'ti': 'ti',
+        'to': 'too',
+        'tu': 'tu',
+        'va': 'va',
+        've': 've',
+        'vi': 'vi',
+        'vo': 'vo',
+        'vu': 'vu',
+        'za': 'za',
+        'ze': 'ze',
+        'zi': 'zi',
+        'zo': 'zo',
+        'zu': 'zu'
+      };
+      
+      // Buscar si la sílaba tiene una mejora fonética especial
+      if (mejorasEspeciales[sil]) {
+        return mejorasEspeciales[sil];
+      }
+      
+      // Para sílabas más largas, también intentar alargar la vocal final
+      if (sil.length === 2 && 'aeiouáéíóú'.includes(sil[1])) {
+        return sil[0] + sil[1] + sil[1]; // duplicar vocal
+      }
+      
+      return silaba;
+    };
+
+    let delay = 0;
+    silabas.forEach((silaba, i) => {
+      setTimeout(() => {
+        const textoMejorado = mejorarPronunciacion(silaba);
+        const utterance = new SpeechSynthesisUtterance(textoMejorado);
+        utterance.lang = lang;
+        utterance.rate = 0.65;
+        utterance.pitch = 1.2;
+        utterance.volume = 1.0;
+        speechSynthesis.speak(utterance);
+      }, delay);
+      delay += 900;
+    });
+  };
+
+  return (
+    <div className="modo-lectura">
+      <button className="btn-volver" onClick={onVolver}>← Volver</button>
+      <h2>📖 Modo Lectura</h2>
+      <p>Toca una palabra para escucharla por sílabas</p>
+      
+      <div className="contenedor-palabras-lectura">
+        {todasPalabras.map((item, i) => {
+          const texto = item.palabra[idioma];
+          const silabas = dividirEnSilabas(texto, idioma).join(' - ');
+          return (
+            <button
+              key={i}
+              className="tarjeta-lectura"
+              onClick={() => leerPorSilabas(texto)}
+              aria-label={`Palabra: ${texto}`}
+            >
+              <span className="icono-lectura">{item.icono}</span>
+              <div className="silabas">{silabas}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // App principal
 function App() {
-  const [idioma, setIdioma] = useState('es'); // 'es', 'en', 'fr', 'de'
+  const [idioma, setIdioma] = useState('es');
   const [modoJuego, setModoJuego] = useState(false);
+  const [modoLectura, setModoLectura] = useState(false);
 
   useEffect(() => {
     if (!window.confetti) {
@@ -241,6 +513,10 @@ function App() {
 
   if (modoJuego) {
     return <ModoJuego idioma={idioma} onVolver={() => setModoJuego(false)} />;
+  }
+
+  if (modoLectura) {
+    return <ModoLectura idioma={idioma} onVolver={() => setModoLectura(false)} />;
   }
 
   return (
@@ -260,6 +536,9 @@ function App() {
           <button className="btn-juego" onClick={() => setModoJuego(true)}>
             🎮 Modo Juego
           </button>
+          <button className="btn-lectura" onClick={() => setModoLectura(true)}>
+            📖 Modo Lectura
+          </button>
         </div>
       </header>
 
@@ -277,7 +556,7 @@ function App() {
       </main>
 
       <footer>
-        <p>✨ Para niños que están aprendiendo a hablar</p>
+        <p>✨ Para niños que están aprendiendo a hablar y a leer</p>
         <p>✅ Progreso guardado automáticamente</p>
       </footer>
     </div>
