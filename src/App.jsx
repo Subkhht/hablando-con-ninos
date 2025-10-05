@@ -189,7 +189,7 @@ function ModoJuego({ idioma, onVolver }) {
         de: 'Sehr gut! 🎉'
       };
       setMensaje(mensajes[idioma] || mensajes.es);
-      setTimeout(() => window.location.reload(), 9000);
+      setTimeout(() => window.location.reload(), 2500);
     } else {
       const mensajes = {
         es: '¡No! Ese no es. ¡Intenta otra vez!',
